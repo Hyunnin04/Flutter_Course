@@ -29,6 +29,8 @@ class Location {
   @override
   int get hashCode => name.hashCode ^ country.hashCode;
 
+  get details => null;
+
   @override
   String toString() {
     return name;

@@ -23,4 +23,6 @@ class RidePref {
         'arrival: ${arrival.name}, '
         'requestedSeats: $requestedSeats)';
   }
+
+
 }
