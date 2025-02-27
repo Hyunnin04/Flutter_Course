@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:week_3_blabla_project/screens/ride/ride_screen.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/passenger_selection_screen.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/widgets/input_pref.dart';
 import 'package:week_3_blabla_project/theme/theme.dart';
@@ -12,83 +13,50 @@ import 'dart:math';
 
 final Random random = Random();
 
-/// A Ride Preference Form is a view to select:
-///   - A departure location
-///   - An arrival location
-///   - A date
-///   - A number of seats
-/// The form can be created with an existing RidePref (optional).
-/// This is the form to select a ride preference.
 class RidePrefForm extends StatefulWidget {
-  // The form can be created with an optional initial RidePref.
   final RidePref? initRidePref;
-
   const RidePrefForm({super.key, this.initRidePref});
 
   @override
-  State<RidePrefForm> createState() => _RidePrefFormState(); // Create the state
+  State<RidePrefForm> createState() => _RidePrefFormState();
 }
 
 class _RidePrefFormState extends State<RidePrefForm> {
-  Location? departure; // Departure and arrival locations
+  Location? departure;
   Location? arrival;
+  late DateTime departureDate;
+  late int requestedSeats;
 
-  late DateTime departureDate; // Departure date
-  late int requestedSeats; // Requested seats
-
-  // ----------------------------------
-  // Initialize the Form attributes
-  // ----------------------------------
-
-  /// Initialize the state with the initial RidePref.
   @override
   void initState() {
     super.initState();
-
-    departure = widget.initRidePref
-        ?.departure; // Set departure and arrival (default to empty if null)
+    departure = widget.initRidePref?.departure;
     arrival = widget.initRidePref?.arrival;
-
     departureDate = widget.initRidePref?.departureDate ?? DateTime.now();
-    // Set the departure date to now if not set
-
     requestedSeats = widget.initRidePref?.requestedSeats ?? 1;
-    // Set the requested seats to 1 if not set
   }
 
-  // ----------------------------------
-  // Handle events
-  // ----------------------------------
-
-  /// Show the date picker to select a departure date.
   void selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: departureDate,
-      firstDate: DateTime(2023), // Set a reasonable first date
-      lastDate: DateTime(2101), // Set a reasonable last date
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2101),
     );
-
     if (pickedDate != null && pickedDate != departureDate) {
-      // 1- If the user selected a date, update the state
       setState(() {
         departureDate = pickedDate;
       });
     }
   }
 
-  /// Navigate to the Passenger Selection Screen.
   void _navigateToPassengerSelection() async {
     final int? selectedSeats = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PassengerSelectionScreen(
-            initialSeats:
-                requestedSeats), // Create the passenger selection screen
+        builder: (context) => PassengerSelectionScreen(initialSeats: requestedSeats),
       ),
     );
-
-    // If the user selected a number of seats, update the state
     if (selectedSeats != null) {
       setState(() {
         requestedSeats = selectedSeats;
@@ -96,57 +64,26 @@ class _RidePrefFormState extends State<RidePrefForm> {
     }
   }
 
-  // ----------------------------------
-  // Location Selection
-  // ----------------------------------
-
-  // Function to select the departure location
-  void _selectDepartureLocation() async {
+  void _selectLocation(bool isDeparture) async {
     final Location? selectedLocation = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => LocationPicker(
+      AnimationUtils.createBottomToTopRoute(
+        LocationPicker(
           onLocationSelected: (location) {
             setState(() {
-              departure = location;
-              Navigator.pop(context);
+              if (isDeparture) {
+                departure = location;
+              } else {
+                arrival = location;
+              }
             });
+            Navigator.pop(context);
           },
         ),
       ),
     );
-
-    if (selectedLocation != null) {
-      setState(() {
-        departure = selectedLocation;
-      });
-    }
   }
 
-  // Function to select the arrival location
-  void _selectArrivalLocation() async {
-    final Location? selectedLocation = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LocationPicker(
-          onLocationSelected: (location) {
-            setState(() {
-              arrival = location;
-              Navigator.pop(context);
-            });
-          },
-        ),
-      ),
-    );
-
-    if (selectedLocation != null) {
-      setState(() {
-        arrival = selectedLocation;
-      });
-    }
-  }
-
-  // function to swithch
   void switchLocations() {
     setState(() {
       final temp = departure;
@@ -155,31 +92,6 @@ class _RidePrefFormState extends State<RidePrefForm> {
     });
   }
 
-  void _showLocation(BuildContext context, bool isDeparture) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => LocationPicker(
-          onLocationSelected: (location) {
-            setState(
-                () => isDeparture ? departure = location : arrival = location);
-            Navigator.pop(context);
-          },
-        ),
-      ),
-    );
-
-    // Using AninationUtils to make tween animation where the dialog will slide up and stop at the center
-    Navigator.push(context, AnimationUtils.createBottomToTopRoute(
-        LocationPicker(onLocationSelected: (location) {
-      setState(() => isDeparture ? departure = location : arrival = location);
-      Navigator.pop(context);
-    })));
-  }
-
-  // ----------------------------------
-  // Build the widgets
-  // ----------------------------------
   bool isChecked = false;
 
   void _toggleRadio() {
@@ -192,73 +104,57 @@ class _RidePrefFormState extends State<RidePrefForm> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        //1 - Departure Location
         InputTile(
           icon: isChecked ? Icons.radio_button_checked : Icons.radio_button_off,
           title: departure?.name ?? "Leaving from",
           trailingIcon: Icons.swap_vert,
           onPressed: switchLocations,
-          onTap: _selectDepartureLocation,
+          onTap: () => _selectLocation(true),
         ),
-
         const BlaDivider(),
-
-        //2 - Arrival Location
         InputTile(
           icon: Icons.radio_button_off,
           title: arrival?.name ?? "Going to",
-          trailingIcon: null,
-          onTap: _selectArrivalLocation,
+          onTap: () => _selectLocation(false), trailingIcon: null,
         ),
-
         const BlaDivider(),
-
-        //3 - Departure Date
         InputTile(
           icon: Icons.date_range,
           title: DateFormat.yMMMd().format(departureDate),
-          trailingIcon: null,
-          onTap: selectDate,
+          onTap: selectDate, trailingIcon: null,
         ),
-
         const BlaDivider(),
-
-        //4 - Requested Seats
         InputTile(
-          icon: Icons.people,
+          icon: Icons.person_outline,
           title: "$requestedSeats",
-          trailingIcon: null,
-          onTap: _navigateToPassengerSelection,
+          onTap: _navigateToPassengerSelection, trailingIcon: null,
         ),
-
-        // 5 - Search Button
         Padding(
-          padding: const EdgeInsets.all(
-              BlaSpacings.m), // Add spacing around the button
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: (departure != null && arrival != null)
-                  ? BlaColors
-                      .primary // Primary color when both locations are selected
-                  : BlaColors
-                      .greyLight, // Secondary color when not both selected
-              minimumSize: Size(
-                  double.infinity, 50), // Full width and height of the tile
+          padding: const EdgeInsets.all(BlaSpacings.m),
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: (departure != null && arrival != null) ? BlaColors.primary : BlaColors.greyLight,
+              minimumSize: Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20), // Rounded bottom-left corner
-                  bottomRight:
-                      Radius.circular(20), // Rounded bottom-right corner
-                  topLeft: Radius.circular(0), // Square top-left corner
-                  topRight: Radius.circular(0), // Square top-right corner
-                ),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
             onPressed: (departure != null && arrival != null)
                 ? () {
-                    // Your logic for submitting or navigating to the next step
+                    final currentPref = RidePref(
+                      departure: departure!,
+                      arrival: arrival!,
+                      departureDate: departureDate,
+                      requestedSeats: requestedSeats,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RidesScreen(selectedPref: currentPref),
+                      ),
+                    );
                   }
-                : null, // Disable button if locations are not selected
+                : null,
             child: Text(
               'Search',
               style: BlaTextStyles.button.copyWith(color: Colors.white),
