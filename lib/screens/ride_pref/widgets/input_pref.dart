@@ -6,8 +6,7 @@ class InputTile extends StatelessWidget {
   final String title;
   final IconData? trailingIcon;
   final VoidCallback onTap;
-  final VoidCallback?
-      onTrailingIconTap; // Add an optional callback for trailing icon tap
+  final VoidCallback? onPressed;
 
   const InputTile({
     super.key,
@@ -15,7 +14,7 @@ class InputTile extends StatelessWidget {
     required this.title,
     required this.trailingIcon,
     required this.onTap,
-    this.onTrailingIconTap,
+    this.onPressed,
   });
 
   @override
@@ -27,7 +26,7 @@ class InputTile extends StatelessWidget {
         style: BlaTextStyles.body,
       ),
       trailing: IconButton(
-        onPressed: () {},
+        onPressed: onPressed,
         icon: Icon(trailingIcon),
         color: BlaColors.primary,
       ),

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/passenger_selection_screen.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/widgets/input_pref.dart';
 import 'package:week_3_blabla_project/theme/theme.dart';
+import 'package:week_3_blabla_project/utils/animations_util.dart';
 import 'package:week_3_blabla_project/widgets/display/bla_divider.dart';
 import 'package:week_3_blabla_project/widgets/inputs/location_selection.dart';
 import '../../../model/ride/locations.dart';
@@ -145,6 +146,15 @@ class _RidePrefFormState extends State<RidePrefForm> {
     }
   }
 
+  // function to swithch
+  void switchLocations() {
+    setState(() {
+      final temp = departure;
+      departure = arrival;
+      arrival = temp;
+    });
+  }
+
   void _showLocation(BuildContext context, bool isDeparture) {
     Navigator.push(
       context,
@@ -158,6 +168,13 @@ class _RidePrefFormState extends State<RidePrefForm> {
         ),
       ),
     );
+
+    // Using AninationUtils to make tween animation where the dialog will slide up and stop at the center
+    Navigator.push(context, AnimationUtils.createBottomToTopRoute(
+        LocationPicker(onLocationSelected: (location) {
+      setState(() => isDeparture ? departure = location : arrival = location);
+      Navigator.pop(context);
+    })));
   }
 
   // ----------------------------------
@@ -180,6 +197,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
           icon: isChecked ? Icons.radio_button_checked : Icons.radio_button_off,
           title: departure?.name ?? "Leaving from",
           trailingIcon: Icons.swap_vert,
+          onPressed: switchLocations,
           onTap: _selectDepartureLocation,
         ),
 
