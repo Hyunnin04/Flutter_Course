@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:week_3_blabla_project/dummy_data/dummy_data.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/passenger_selection_screen.dart';
 import 'package:week_3_blabla_project/screens/ride_pref/widgets/input_pref.dart';
 import 'package:week_3_blabla_project/theme/theme.dart';
 import 'package:week_3_blabla_project/widgets/display/bla_divider.dart';
+import 'package:week_3_blabla_project/widgets/inputs/location_selection.dart';
 import '../../../model/ride/locations.dart';
 import '../../../model/ride_pref/ride_pref.dart';
 import 'dart:math';
@@ -104,11 +104,11 @@ class _RidePrefFormState extends State<RidePrefForm> {
     final Location? selectedLocation = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LocationSelectionScreen(
-          locations: fakeLocations,
+        builder: (context) => LocationPicker(
           onLocationSelected: (location) {
             setState(() {
               departure = location;
+              Navigator.pop(context);
             });
           },
         ),
@@ -127,11 +127,11 @@ class _RidePrefFormState extends State<RidePrefForm> {
     final Location? selectedLocation = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LocationSelectionScreen(
-          locations: fakeLocations,
+        builder: (context) => LocationPicker(
           onLocationSelected: (location) {
             setState(() {
               arrival = location;
+              Navigator.pop(context);
             });
           },
         ),
@@ -145,9 +145,31 @@ class _RidePrefFormState extends State<RidePrefForm> {
     }
   }
 
+  void _showLocation(BuildContext context, bool isDeparture) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => LocationPicker(
+          onLocationSelected: (location) {
+            setState(
+                () => isDeparture ? departure = location : arrival = location);
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+
   // ----------------------------------
   // Build the widgets
   // ----------------------------------
+  bool isChecked = false;
+
+  void _toggleRadio() {
+    setState(() {
+      isChecked = !isChecked;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +177,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
       children: [
         //1 - Departure Location
         InputTile(
-          icon: Icons.radio_button_off,
+          icon: isChecked ? Icons.radio_button_checked : Icons.radio_button_off,
           title: departure?.name ?? "Leaving from",
           trailingIcon: Icons.swap_vert,
           onTap: _selectDepartureLocation,
@@ -226,38 +248,6 @@ class _RidePrefFormState extends State<RidePrefForm> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// Location Selection Screen
-class LocationSelectionScreen extends StatelessWidget {
-  final List<Location> locations;
-  final ValueChanged<Location> onLocationSelected;
-
-  const LocationSelectionScreen({
-    super.key,
-    required this.locations,
-    required this.onLocationSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Select Location")),
-      body: ListView.builder(
-        itemCount: locations.length,
-        itemBuilder: (context, index) {
-          final location = locations[index];
-          return ListTile(
-            title: Text(location.name),
-            onTap: () {
-              onLocationSelected(location);
-              Navigator.pop(context); // Close the screen after selection
-            },
-          );
-        },
-      ),
     );
   }
 }

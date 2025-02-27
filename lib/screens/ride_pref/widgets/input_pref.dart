@@ -6,6 +6,8 @@ class InputTile extends StatelessWidget {
   final String title;
   final IconData? trailingIcon;
   final VoidCallback onTap;
+  final VoidCallback?
+      onTrailingIconTap; // Add an optional callback for trailing icon tap
 
   const InputTile({
     super.key,
@@ -13,6 +15,7 @@ class InputTile extends StatelessWidget {
     required this.title,
     required this.trailingIcon,
     required this.onTap,
+    this.onTrailingIconTap,
   });
 
   @override
